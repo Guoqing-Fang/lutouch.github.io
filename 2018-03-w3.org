@@ -1,0 +1,72 @@
+* Plan: 2018-03-19
+** 结合实例, 完成 graphx 教程
+** 帮助点点完成 315MGM 借款测试
+** 帮助翔宇获取点点历史数据
+  
+* Plan: 2018-03-w3
+** TODO [#B] IF 模型的流式计算[1/5] 
+   1. [X] 检测Kafka可用性, 设计测试方案 [[#Kafka Test Suite]]
+   2. [-] 加载HDFS中存储的模型
+   3. [-] 接收流式消息, 汇总特征  ==> HBase中多个用户的特征获取
+   4. [-] 采用模型对用户特征进行异常判别
+   5. [-] 异常判别结果作为"特征"写入HBase
+
+** TODO [#B] 花豹+魔蝎
+   花豹的用户信息(Vertex) + 魔蝎的用户联系(Edge) ==> Graph
+
+** DONE [#A] IF 模型训练+存储[3/3]
+   CLOSED: [2018-03-22 Thu 18:29]
+   1. [X] 线上读取 HBase 中整理好的特征
+   2. [X] 训练模型
+   3. [X] 存储模型到HDFS
+
+** DONE [#C] 完善 Zeppelin 配置[3/3]
+   CLOSED: [2018-03-19 Mon 14:36]
+   1. [X] 用户权限
+   2. [X] 笔记权限
+   3. [X] 添加第三方[[https://cloud.tencent.com/developer/article/1014658][库]]以及[[http://blog.csdn.net/tuntunwang/article/details/51392765][包]]依赖
+   
+   #+BEGIN_SRC scala
+   %spark.dep
+   z.addRepo("CDHRepo").url("https://repository.cloudera.com/artifactory/cloudera-repos/")
+   z.load("org.apache.hbase:hbase-common:1.2.0-cdh5.13.1")
+   z.load("org.apache.hbase:hbase-client:1.2.0-cdh5.13.1")
+   z.load("org.apache.hbase:hbase-server:1.2.0-cdh5.13.1")
+   #+END_SRC
+
+
+* Problems
+** map 与 flatMap
+
+   完成HBase中多个用户特征的Scan方式获取
+
+
+* Kafka Test Suite
+  :PROPERTIES:
+  :CUSTOM_ID: Kafka Test Suite
+  :END:
+** shell
+   #+BEGIN_SRC shell
+   kafka-console-consumer --zookeeper bizdata3:2181,bizdata4:2181,bizdata5:2181 --from-beginning --topic foobar
+   #+END_SRC
+
+** python
+   1. consumer
+      #+BEGIN_SRC python
+      from kafka import KafkaConsumer
+      brokers = "bizdata3:9092,bizdata4:9092,bizdata5:9092"
+      consumer = KafkaConsumer('foobar', group_id='test_fgq', bootstrap_servers=brokers.split(','))
+      for msg in consumer:
+          print msg.value
+      #+END_SRC
+
+   2. producer
+      #+BEGIN_SRC python
+      from kafka import KafkaProducer
+      brokers = "bizdata3:9092,bizdata4:9092,bizdata5:9092"
+      producer = KafkaProducer(bootstrap_servers=brokers)
+
+      for i in range(1000):
+          producer.send('foobar', 'Hello There!')
+          print i
+      #+END_SRC
